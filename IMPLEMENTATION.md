@@ -22,6 +22,15 @@
 - `dart fix`, `flutter analyze`, `dart format` を実行してコードの品質を担保。
 - **学び:** `flutter test` を実行する前に、`test` ディレクトリと、その中に `pubspec.yaml` で定義されているパッケージ (`trip_planner`) への依存関係を解決するためのファイル構造が必要だった。
 
+**2025/10/10**
+**フェーズ3完了！**
+- `go_router`を導入し、基本的な画面遷移の仕組みを構築。
+- `CreateTripScreen`のUIと、その状態を管理する`CreateTripViewModel`を作成。
+- `ListenableBuilder`を使ってUIとViewModelを連携させた。
+- `CreateTripScreen`のウィジェットテストを追加し、画面が正しく表示されることを確認。
+- `flutter analyze`で`print`文の使用が検出されたため、修正した。
+- **学び:** `StatefulWidget`の`initState`でViewModelを初期化し、`dispose`で破棄するライフサイクル管理が重要。`TextEditingController`の`addListener`を使うことで、UIの入力をリアルタイムでViewModelに伝えることができた。
+
 ---
 
 ## フェーズ 1: プロジェクトのセットアップ
@@ -73,22 +82,22 @@
 
 画面遷移の仕組みを導入し、最初の機能である旅行プラン作成画面を作ります。
 
-- [ ] `go_router` パッケージをプロジェクトに追加する。
-- [ ] `lib/core/routing/app_router.dart` を作成し、アプリの画面遷移ルートを設定する。
-- [ ] `lib/features/create_trip/view/create_trip_screen.dart` に、目的地や日付を入力するためのUIを実装する。
-- [ ] `lib/features/create_trip/viewmodel/create_trip_viewmodel.dart` を作成し、入力フォームの状態を管理するロジックを実装する。
-- [ ] `main.dart` を更新し、`go_router` を使ったナビゲーションを有効にする。
+- [x] `go_router` パッケージをプロジェクトに追加する。
+- [x] `lib/core/routing/app_router.dart` を作成し、アプリの画面遷移ルートを設定する。
+- [x] `lib/features/create_trip/view/create_trip_screen.dart` に、目的地や日付を入力するためのUIを実装する。
+- [x] `lib/features/create_trip/viewmodel/create_trip_viewmodel.dart` を作成し、入力フォームの状態を管理するロジックを実装する。
+- [x] `main.dart` を更新し、`go_router` を使ったナビゲーションを有効にする。
 
 ### 各タスク完了後のチェックリスト:
-- [ ] このフェーズで追加・変更したコードに対するユニットテスト・ウィジェットテストを作成する。
-- [ ] `dart fix --apply` を実行してコードをクリーンアップする。
-- [ ] `flutter analyze` を実行し、問題を修正する。
-- [ ] `flutter test` を実行し、すべてのテストがパスすることを確認する。
-- [ ] `dart format .` を実行して、フォーマットを整える。
-- [ ] この`IMPLEMENTATION.md`ファイルを再読み込みし、変更がないか確認する。
-- [ ] `IMPLEMENTATION.md`のジャーナルを更新し、完了したタaskにチェックを入れる。
-- [ ] `git diff` で変更内容を確認し、ユーザーにコミットメッセージの承認を得る。
-- [ ] 承認後、変更をコミットする。
+- [x] このフェーズで追加・変更したコードに対するユニットテスト・ウィジェットテストを作成する。
+- [x] `dart fix --apply` を実行してコードをクリーンアップする。
+- [x] `flutter analyze` を実行し、問題を修正する。
+- [x] `flutter test` を実行し、すべてのテストがパスすることを確認する。
+- [x] `dart format .` を実行して、フォーマットを整える。
+- [x] この`IMPLEMENTATION.md`ファイルを再読み込みし、変更がないか確認する。
+- [x] `IMPLEMENTATION.md`のジャーナルを更新し、完了したタスクにチェックを入れる。
+- [x] `git diff` で変更内容を確認し、ユーザーにコミットメッセージの承認を得る。
+- [x] 承認後、変更をコミットする。
 
 ---
 

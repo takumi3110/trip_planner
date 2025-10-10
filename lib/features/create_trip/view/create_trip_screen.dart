@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:trip_planner/features/create_trip/viewmodel/create_trip_viewmodel.dart';
 
 class CreateTripScreen extends StatefulWidget {
@@ -51,7 +52,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 const Text('（ここに日付選択のUIが入るよ）'),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _viewModel.createTrip,
+                  onPressed: () {
+                    _viewModel.createTrip();
+                    // Navigate to the details screen with a hardcoded ID for now
+                    context.go('/trip/1');
+                  },
                   child: const Text('プランを作成'),
                 ),
               ],
