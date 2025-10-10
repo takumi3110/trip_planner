@@ -13,6 +13,15 @@
 - `git init`でGitリポジトリを初期化し、`main`ブランチに最初のコミットをプッシュ。
 - **学び:** `flutter create`は空じゃないディレクトリでは失敗する。先に`DESIGN.md`とかを作っちゃってたから、`flutter create .` を実行して既存のファイルを上書き・統合する形にした。今後は先にプロジェクト作ってからドキュメントを追加するフローが良いかも！
 
+**2025/10/10**
+**フェーズ2完了！**
+- `Trip`, `Itinerary`, `Activity` のデータモデルを作成。
+- `TripRepository` のインターフェースを定義。
+- ダミーデータを返す `MockTripDataSource` を実装。
+- 作成したモデルとデータソースに対するユニットテストを追加し、すべてパスすることを確認。
+- `dart fix`, `flutter analyze`, `dart format` を実行してコードの品質を担保。
+- **学び:** `flutter test` を実行する前に、`test` ディレクトリと、その中に `pubspec.yaml` で定義されているパッケージ (`trip_planner`) への依存関係を解決するためのファイル構造が必要だった。
+
 ---
 
 ## フェーズ 1: プロジェクトのセットアップ
@@ -43,20 +52,20 @@
 
 アプリの核となるデータ構造と、データを扱うためのRepositoryパターンを実装します。
 
-- [ ] `lib/data/models/` ディレクトリを作成し、`trip.dart`, `itinerary.dart`, `activity.dart` の各モデルファイルを作成する。
-- [ ] `lib/data/repositories/` ディレクトリを作成し、`trip_repository.dart` ファイルに `TripRepository` の抽象クラス（インターフェース）を定義する。
-- [ ] `lib/data/sources/` ディレクトリを作成し、`mock_trip_data_source.dart` にダミーデータを返す `TripRepository` の実装クラスを作成する。
+- [x] `lib/data/models/` ディレクトリを作成し、`trip.dart`, `itinerary.dart`, `activity.dart` の各モデルファイルを作成する。
+- [x] `lib/data/repositories/` ディレクトリを作成し、`trip_repository.dart` ファイルに `TripRepository` の抽象クラス（インターフェース）を定義する。
+- [x] `lib/data/sources/` ディレクトリを作成し、`mock_trip_data_source.dart` にダミーデータを返す `TripRepository` の実装クラスを作成する。
 
 ### 各タスク完了後のチェックリスト:
-- [ ] このフェーズで追加・変更したコードに対するユニットテストを作成する。
-- [ ] `dart fix --apply` を実行してコードをクリーンアップする。
-- [ ] `flutter analyze` を実行し、問題を修正する。
-- [ ] `flutter test` を実行し、すべてのテストがパスすることを確認する。
-- [ ] `dart format .` を実行して、フォーマットを整える。
-- [ ] この`IMPLEMENTATION.md`ファイルを再読み込みし、変更がないか確認する。
-- [ ] `IMPLEMENTATION.md`のジャーナルを更新し、完了したタスクにチェックを入れる。
-- [ ] `git diff` で変更内容を確認し、ユーザーにコミットメッセージの承認を得る。
-- [ ] 承認後、変更をコミットする。
+- [x] このフェーズで追加・変更したコードに対するユニットテストを作成する。
+- [x] `dart fix --apply` を実行してコードをクリーンアップする。
+- [x] `flutter analyze` を実行し、問題を修正する。
+- [x] `flutter test` を実行し、すべてのテストがパスすることを確認する。
+- [x] `dart format .` を実行して、フォーマットを整える。
+- [x] この`IMPLEMENTATION.md`ファイルを再読み込みし、変更がないか確認する。
+- [x] `IMPLEMENTATION.md`のジャーナルを更新し、完了したタスクにチェックを入れる。
+- [x] `git diff` で変更内容を確認し、ユーザーにコミットメッセージの承認を得る。
+- [x] 承認後、変更をコミットする。
 
 ---
 
