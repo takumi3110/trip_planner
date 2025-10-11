@@ -32,7 +32,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('新しい旅行プラン')),
+      appBar: AppBar(
+        title: Text(
+          '新しい旅行プラン',
+          style: Theme.of(context).textTheme.headlineSmall, // フォントをテーマに合わせる
+        ),
+      ),
       body: ListenableBuilder(
         listenable: _viewModel,
         builder: (context, child) {
@@ -42,22 +47,42 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               children: [
                 TextFormField(
                   controller: _destinationController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '目的地',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0), // 角を丸くする
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 // Date pickers will be added later
-                const Text('（ここに日付選択のUIが入るよ）'),
+                Text(
+                  '（ここに日付選択のUIが入るよ）',
+                  style:
+                      Theme.of(context).textTheme.bodyMedium, // フォントをテーマに合わせる
+                ),
                 const SizedBox(height: 32),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0), // 角を丸くする
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 15,
+                    ),
+                  ),
                   onPressed: () {
                     _viewModel.createTrip();
                     // Navigate to the details screen with a hardcoded ID for now
                     context.go('/trip/1');
                   },
-                  child: const Text('プランを作成'),
+                  child: Text(
+                    'プランを作成',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
               ],
             ),
