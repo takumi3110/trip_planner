@@ -37,6 +37,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           '新しい旅行プラン',
           style: Theme.of(context).textTheme.headlineSmall, // フォントをテーマに合わせる
         ),
+        actions: [ // 追加
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              context.go('/settings');
+            },
+          ),
+        ],
       ),
       body: ListenableBuilder(
         listenable: _viewModel,
