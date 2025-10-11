@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import '../models/activity.dart';
 import '../models/itinerary.dart';
 import '../models/trip.dart';
@@ -9,6 +10,7 @@ class MockTripDataSource implements TripRepository {
       destination: '沖縄',
       startDate: DateTime(2025, 11, 10),
       endDate: DateTime(2025, 11, 13),
+      numberOfPeople: 2,
       itineraries: [
         Itinerary(
           date: DateTime(2025, 11, 10),
@@ -16,12 +18,12 @@ class MockTripDataSource implements TripRepository {
             Activity(
               name: '那覇空港到着',
               location: '那覇空港',
-              startTime: DateTime(2025, 11, 10, 10, 0),
+              time: const TimeOfDay(hour: 10, minute: 0),
             ),
             Activity(
               name: '国際通りでランチ',
               location: '国際通り',
-              startTime: DateTime(2025, 11, 10, 12, 0),
+              time: const TimeOfDay(hour: 12, minute: 0),
               description: 'タコライスを食べる！',
             ),
           ],

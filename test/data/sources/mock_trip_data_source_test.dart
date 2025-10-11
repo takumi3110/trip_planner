@@ -31,6 +31,7 @@ void main() {
         startDate: DateTime.now(),
         endDate: DateTime.now().add(const Duration(days: 3)),
         itineraries: [],
+        numberOfPeople: 1,
       );
 
       await dataSource.saveTrip(newTrip);

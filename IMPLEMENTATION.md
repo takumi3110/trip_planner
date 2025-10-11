@@ -31,6 +31,27 @@
 - `flutter analyze`で`print`文の使用が検出されたため、修正した。
 - **学び:** `StatefulWidget`の`initState`でViewModelを初期化し、`dispose`で破棄するライフサイクル管理が重要。`TextEditingController`の`addListener`を使うことで、UIの入力をリアルタイムでViewModelに伝えることができた。
 
+**2025/10/11**
+**フェーズ4完了！**
+- `lib/features/trip_details/view/trip_details_screen.dart` に、旅程リストを表示するUIを実装。
+- `lib/features/trip_details/viewmodel/trip_details_viewmodel.dart` を作成し、`TripRepository`
+  から旅程データを取得し、UIに渡すロジックを実装。
+- プラン作成画面から詳細画面へ遷移できるように `go_router` の設定を更新。
+- `provider` パッケージを導入し、`TripRepository` を提供するように `main.dart` を修正。
+- `Activity` モデルの `time` フィールドを `DateTime` から `TimeOfDay` に変更し、関連するテストファイルと
+  `mock_trip_data_source.dart` を修正。
+- `trip_details_screen_test.dart` のテストを修正し、`ProviderNotFoundException` や `CircularProgressIndicator` が見つからない問題、
+  `TimeOfDay.format` のロケール依存の問題を解決。
+- `dart fix`, `flutter analyze`, `dart format` を実行してコードの品質を担保。
+- **学び:** テスト環境での `Provider` の設定順序や、`TimeOfDay.format` のロケール・システム設定依存性、`mocktail` を使った
+  `ViewModel` のテスト方法など、多くのことを学んだ！特に `await tester.pumpAndSettle()` の重要性を再認識したよ！
+
+**2025/10/11**
+**フェーズ5完了！**
+- `README.md` ファイルを更新し、アプリの概要、機能、使い方などを詳細に記述する。
+- プロジェクトのルートに `GEMINI.md` ファイルを作成し、アプリの目的、アーキテクチャ、ファイル構成などを記述する。
+- ユーザーにアプリ全体の動作とコードを確認してもらい、満足のいくものになっているか、修正が必要な点はないか最終レビューを依頼する。
+
 ---
 
 ## フェーズ 1: プロジェクトのセットアップ
@@ -105,18 +126,18 @@
 
 生成された旅行プランの詳細を表示する画面を実装します。
 
-- [ ] `lib/features/trip_details/view/trip_details_screen.dart` に、旅程リストを表示するUIを実装する。
-- [ ] `lib/features/trip_details/viewmodel/trip_details_viewmodel.dart` を作成し、`TripRepository` から旅程データを取得し、UIに渡すロジックを実装する。
-- [ ] プラン作成画面から詳細画面へ遷移できるように `go_router` の設定を更新する。
+- [x] `lib/features/trip_details/view/trip_details_screen.dart` に、旅程リストを表示するUIを実装する。
+- [x] `lib/features/trip_details/viewmodel/trip_details_viewmodel.dart` を作成し、`TripRepository` から旅程データを取得し、UIに渡すロジックを実装する。
+- [x] プラン作成画面から詳細画面へ遷移できるように `go_router` の設定を更新する。
 
 ### 各タスク完了後のチェックリスト:
-- [ ] このフェーズで追加・変更したコードに対するユニットテスト・ウィジェットテストを作成する。
-- [ ] `dart fix --apply` を実行してコードをクリーンアップする。
-- [ ] `flutter analyze` を実行し、問題を修正する。
-- [ ] `flutter test` を実行し、すべてのテストがパスすることを確認する。
-- [ ] `dart format .` を実行して、フォーマットを整える。
-- [ ] この`IMPLEMENTATION.md`ファイルを再読み込みし、変更がないか確認する。
-- [ ] `IMPLEMENTATION.md`のジャーナルを更新し、完了したタスクにチェックを入れる。
+- [x] このフェーズで追加・変更したコードに対するユニットテスト・ウィジェットテストを作成する。
+- [x] `dart fix --apply` を実行してコードをクリーンアップする。
+- [x] `flutter analyze` を実行し、問題を修正する。
+- [x] `flutter test` を実行し、すべてのテストがパスすることを確認する。
+- [x] `dart format .` を実行して、フォーマットを整える。
+- [x] この`IMPLEMENTATION.md`ファイルを再読み込みし、変更がないか確認する。
+- [x] `IMPLEMENTATION.md`のジャーナルを更新し、完了したタスクにチェックを入れる。
 - [ ] `git diff` で変更内容を確認し、ユーザーにコミットメッセージの承認を得る。
 - [ ] 承認後、変更をコミットする。
 
@@ -126,9 +147,9 @@
 
 アプリのドキュメントを整備し、最終確認を行います。
 
-- [ ] `README.md` ファイルを更新し、アプリの概要、機能、使い方などを詳細に記述する。
-- [ ] プロジェクトのルートに `GEMINI.md` ファイルを作成し、アプリの目的、アーキテクチャ、ファイル構成などを記述する。
-- [ ] ユーザーにアプリ全体の動作とコードを確認してもらい、満足のいくものになっているか、修正が必要な点はないか最終レビューを依頼する。
+- [x] `README.md` ファイルを更新し、アプリの概要、機能、使い方などを詳細に記述する。
+- [x] プロジェクトのルートに `GEMINI.md` ファイルを作成し、アプリの目的、アーキテクチャ、ファイル構成などを記述する。
+- [x] ユーザーにアプリ全体の動作とコードを確認してもらい、満足のいくものになっているか、修正が必要な点はないか最終レビューを依頼する。
 
 ---
 タスクを完了した後、もしコード内に `TODO` を残したり、未実装の部分がある場合は、新しいタスクとしてここに追加し、後で忘れずに対応できるようにしてください。

@@ -8,10 +8,12 @@ class Trip {
     required this.startDate,
     required this.endDate,
     required this.itineraries,
+    required this.numberOfPeople,
   });
 
   final String destination;
   final DateTime startDate;
   final DateTime endDate;
   final List<Itinerary> itineraries;
+  final int numberOfPeople;
 }

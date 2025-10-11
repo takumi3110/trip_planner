@@ -1,18 +1,16 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 @immutable
 class Activity {
   const Activity({
     required this.name,
     required this.location,
-    required this.startTime,
-    this.endTime,
     this.description,
+    required this.time,
   });
 
   final String name;
   final String location;
-  final DateTime startTime;
-  final DateTime? endTime;
   final String? description;
+  final TimeOfDay time;
 }

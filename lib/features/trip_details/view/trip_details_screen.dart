@@ -1,88 +1,130 @@
 import 'package:flutter/material.dart';
-import 'package:trip_planner/data/repositories/trip_repository.dart';
+import 'package:trip_planner/data/models/trip.dart';
 import 'package:trip_planner/features/trip_details/viewmodel/trip_details_viewmodel.dart';
+import 'package:provider/provider.dart'; // Providerを使うために追加
 
-class TripDetailsScreen extends StatefulWidget {
-  const TripDetailsScreen({
-    super.key,
-    required this.tripId,
-    required this.tripRepository,
-  });
-
+class TripDetailsScreen extends StatelessWidget {
   final String tripId;
-  final TripRepository tripRepository;
 
-  @override
-  State<TripDetailsScreen> createState() => _TripDetailsScreenState();
-}
-
-class _TripDetailsScreenState extends State<TripDetailsScreen> {
-  late final TripDetailsViewModel _viewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _viewModel = TripDetailsViewModel(
-      tripRepository: widget.tripRepository,
-      tripId: widget.tripId,
-    );
-    _viewModel.fetchTripDetails();
-  }
-
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
-  }
+  const TripDetailsScreen({super.key, required this.tripId});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: ListenableBuilder(
-          listenable: _viewModel,
-          builder: (context, child) {
-            return Text(_viewModel.trip?.destination ?? '読み込み中...');
-          },
-        ),
-      ),
-      body: ListenableBuilder(
-        listenable: _viewModel,
-        builder: (context, child) {
-          if (_viewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return ChangeNotifierProvider(
+      create:
+          (_) => TripDetailsViewModel(
+            tripId: tripId,
+            tripRepository: Provider.of(
+              context,
+              listen: false,
+            ), // ここでTripRepositoryを渡す
+          )..loadTripDetails(),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('旅程詳細')),
+        body: Consumer<TripDetailsViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (_viewModel.trip == null) {
-            return const Center(child: Text('旅行プランが見つかりませんでした。'));
-          }
+            if (viewModel.trip == null) {
+              return const Center(child: Text('旅行プランが見つかりませんでした。'));
+            }
 
-          final trip = _viewModel.trip!;
-          return ListView.builder(
-            itemCount: trip.itineraries.length,
-            itemBuilder: (context, index) {
-              final itinerary = trip.itineraries[index];
-              return Column(
+            final Trip trip = viewModel.trip!;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      '${itinerary.date.month}月${itinerary.date.day}日',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
+                  Text(
+                    trip.destination,
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
-                  ...itinerary.activities.map(
-                    (activity) => ListTile(
-                      title: Text(activity.name),
-                      subtitle: Text(activity.location),
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${trip.startDate.toLocal().toIso8601String().split('T')[0]} - ${trip.endDate.toLocal().toIso8601String().split('T')[0]}',
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '人数: ${trip.numberOfPeople}人',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 24),
+                  Text('旅程', style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 16),
+                  if (trip.itineraries.isEmpty)
+                    const Text('まだ旅程がありません。')
+                  else
+                    ...trip.itineraries.map((itinerary) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '日付: ${itinerary.date.toLocal().toIso8601String().split('T')[0]}',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              ...itinerary.activities.map((activity) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 8.0,
+                                    bottom: 4.0,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        activity.name,
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge,
+                                      ),
+                                      Text(
+                                        '時間: ${activity.time.format(context)}',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium,
+                                      ),
+                                      Text(
+                                        '場所: ${activity.location}',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium,
+                                      ),
+                                      if (activity.description != null)
+                                        Text(
+                                          '詳細: ${activity.description}',
+                                          style:
+                                              Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall,
+                                        ),
+                                      const SizedBox(height: 8),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
                 ],
-              );
-            },
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

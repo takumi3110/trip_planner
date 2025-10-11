@@ -3,24 +3,27 @@ import 'package:trip_planner/data/models/trip.dart';
 import 'package:trip_planner/data/repositories/trip_repository.dart';
 
 class TripDetailsViewModel extends ChangeNotifier {
-  TripDetailsViewModel({required this.tripRepository, required this.tripId});
-
-  final TripRepository tripRepository;
   final String tripId;
+  final TripRepository tripRepository;
 
   Trip? _trip;
-  Trip? get trip => _trip;
-
   bool _isLoading = false;
+
+  TripDetailsViewModel({required this.tripId, required this.tripRepository});
+
+  Trip? get trip => _trip;
   bool get isLoading => _isLoading;
 
-  Future<void> fetchTripDetails() async {
+  Future<void> loadTripDetails() async {
     _isLoading = true;
     notifyListeners();
+
     try {
       _trip = await tripRepository.getTrip(tripId);
     } catch (e) {
-      // Handle error
+      // エラーハンドリング
+      debugPrint('Error loading trip details: $e');
+      _trip = null; // エラー時はnullにするか、エラー状態を保持する
     } finally {
       _isLoading = false;
       notifyListeners();
