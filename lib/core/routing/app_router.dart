@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:trip_planner/features/create_trip/view/create_trip_screen.dart';
+import 'package:trip_planner/features/home_screen.dart';
 import 'package:trip_planner/features/trip_details/view/trip_details_screen.dart';
 import 'package:trip_planner/features/settings/view/settings_screen.dart'; // 追加
 
@@ -10,7 +11,7 @@ final GoRouter appRouter = GoRouter(
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
         // For now, show the create trip screen
-        return const CreateTripScreen();
+        return const HomeScreen();
       },
       routes: <RouteBase>[
         GoRoute(
