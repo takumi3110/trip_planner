@@ -66,11 +66,106 @@ void main() {
       await tester.tap(find.text('ピンク'));
       await tester.pumpAndSettle();
 
-      expect(themeNotifier.currentTheme, isNot(initialTheme));
       // Color型同士で比較するように修正
       expect(
-        themeNotifier.currentTheme.colorScheme.primary.value,
-        ColorScheme.fromSeed(seedColor: Colors.pink).primary.value,
+        themeNotifier.currentTheme.colorScheme.primary.toARGB32(),
+        Colors.pink.toARGB32(),
+      );
+    });
+
+    testWidgets('tapping a mint green theme color option changes theme', (tester) async {
+      final themeNotifier = ThemeNotifier(ThemeData.light());
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: themeNotifier,
+          child: const MaterialApp(home: SettingsScreen()),
+        ),
+      );
+
+      await tester.tap(find.text('テーマカラー'));
+      await tester.pumpAndSettle();
+
+      final initialTheme = themeNotifier.currentTheme;
+
+      await tester.tap(find.text('ミントグリーン'));
+      await tester.pumpAndSettle();
+
+      expect(
+        themeNotifier.currentTheme.colorScheme.primary.toARGB32(),
+        Colors.teal.shade100.toARGB32(),
+      );
+    });
+
+    testWidgets('tapping a lavender theme color option changes theme', (tester) async {
+      final themeNotifier = ThemeNotifier(ThemeData.light());
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: themeNotifier,
+          child: const MaterialApp(home: SettingsScreen()),
+        ),
+      );
+
+      await tester.tap(find.text('テーマカラー'));
+      await tester.pumpAndSettle();
+
+      final initialTheme = themeNotifier.currentTheme;
+
+      await tester.tap(find.text('ラベンダー'));
+      await tester.pumpAndSettle();
+
+      expect(
+        themeNotifier.currentTheme.colorScheme.primary.toARGB32(),
+        Colors.deepPurple.shade100.toARGB32(),
+      );
+    });
+
+    testWidgets('tapping a coral pink theme color option changes theme', (tester) async {
+      final themeNotifier = ThemeNotifier(ThemeData.light());
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: themeNotifier,
+          child: const MaterialApp(home: SettingsScreen()),
+        ),
+      );
+
+      await tester.tap(find.text('テーマカラー'));
+      await tester.pumpAndSettle();
+
+      final initialTheme = themeNotifier.currentTheme;
+
+      await tester.tap(find.text('コーラルピンク'));
+      await tester.pumpAndSettle();
+
+      expect(
+        themeNotifier.currentTheme.colorScheme.primary.toARGB32(),
+        Colors.deepOrange.shade100.toARGB32(),
+      );
+    });
+
+    testWidgets('tapping a beige theme color option changes theme', (tester) async {
+      final themeNotifier = ThemeNotifier(ThemeData.light());
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: themeNotifier,
+          child: const MaterialApp(home: SettingsScreen()),
+        ),
+      );
+
+      await tester.tap(find.text('テーマカラー'));
+      await tester.pumpAndSettle();
+
+      final initialTheme = themeNotifier.currentTheme;
+
+      await tester.tap(find.text('ベージュ'));
+      await tester.pumpAndSettle();
+
+      expect(
+        themeNotifier.currentTheme.colorScheme.primary.toARGB32(),
+        Colors.amber.shade100.toARGB32(),
       );
     });
   });

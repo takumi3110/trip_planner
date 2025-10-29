@@ -76,7 +76,15 @@ flutter:
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
-  # example:
+  # For example:
+  fonts:
+    - family: Yosuga
+      fonts:
+        - asset: assets/fonts/yosugaraver1_2.ttf
+
+    - family: YasashisaGothicBold
+      fonts:
+        - asset: assets/fonts/YasashisaGothicBold-V2.otf
   # fonts:
   #   - family: Schyler
   #     fonts:

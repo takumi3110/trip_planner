@@ -21,9 +21,8 @@ class TripDetailsScreen extends StatelessWidget {
           )..loadTripDetails(),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
+          title: const Text(
             '旅程詳細',
-            style: Theme.of(context).textTheme.headlineSmall, // フォントをテーマに合わせる
           ),
         ),
         body: Consumer<TripDetailsViewModel>(
@@ -66,9 +65,6 @@ class TripDetailsScreen extends StatelessWidget {
                     ...trip.itineraries.map((itinerary) {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0), // 角を丸くする
-                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(

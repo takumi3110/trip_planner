@@ -33,11 +33,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           '新しい旅行プラン',
-          style: Theme.of(context).textTheme.headlineSmall, // フォントをテーマに合わせる
         ),
-        actions: [ // 追加
+        actions: [
+          // 追加
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
@@ -55,26 +55,63 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               children: [
                 TextFormField(
                   controller: _destinationController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: '目的地',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0), // 角を丸くする
-                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 // Date pickers will be added later
-                Text(
-                  '（ここに日付選択のUIが入るよ）',
-                  style:
-                      Theme.of(context).textTheme.bodyMedium, // フォントをテーマに合わせる
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate: _viewModel.startDate ?? DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2100),
+                          );
+                          if (selectedDate != null) {
+                            _viewModel.setStartDate(selectedDate);
+                          }
+                        },
+                        child: Text(
+                          _viewModel.startDate == null
+                              ? '開始日を選択'
+                              : '開始日: ${_viewModel.startDate!.toLocal().toString().split(' ')[0]}',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate:
+                                _viewModel.endDate ??
+                                _viewModel.startDate ??
+                                DateTime.now(),
+                            firstDate: _viewModel.startDate ?? DateTime.now(),
+                            lastDate: DateTime(2100),
+                          );
+                          if (selectedDate != null) {
+                            _viewModel.setEndDate(selectedDate);
+                          }
+                        },
+                        child: Text(
+                          _viewModel.endDate == null
+                              ? '終了日を選択'
+                              : '終了日: ${_viewModel.endDate!.toLocal().toString().split(' ')[0]}',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0), // 角を丸くする
-                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 40,
                       vertical: 15,
