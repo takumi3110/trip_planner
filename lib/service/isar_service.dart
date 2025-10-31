@@ -59,11 +59,16 @@ class IsarService {
       final isar = await db;
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      return await isar
-          .collection<Trip>()
-          .filter()
-          .startDateEqualTo(today)
-          .findFirst();
+      final lastTimeDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final result =
+          await isar
+              .collection<Trip>()
+              .filter()
+              .startDateGreaterThan(today)
+              .and()
+              .endDateLessThan(lastTimeDay) // startDateが今日
+              .findFirst();
+      return result;
     } catch (error) {
       debugPrint('本日の旅行取得に失敗しました。: $error');
       return null;
@@ -75,7 +80,7 @@ class IsarService {
     try {
       final isar = await db;
       final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day); // 今日の日付（時間なし）
+      final today = DateTime(now.year, now.month, now.day + 1); // 今日の日付（時間なし）
 
       return await isar
           .collection<Trip>()
@@ -139,6 +144,13 @@ class IsarService {
     try {
       final isar = await db;
       return await isar.writeTxn(() async {
+        final tripToDelete = await isar.collection<Trip>().get(id);
+        if (tripToDelete != null) {
+          await tripToDelete.activities.load(); // 関連するアクティビティをロード
+          await isar.collection<Activity>().deleteAll(
+            tripToDelete.activities.map((e) => e.id).toList(),
+          ); // アクティビティを削除
+        }
         await isar.collection<Trip>().delete(id);
         return true;
       });
@@ -176,7 +188,11 @@ class IsarService {
   Future<List<Activity>> getAllActivity() async {
     try {
       final isar = await db;
-      return await isar.collection<Activity>().where().sortByArrivalTime().findAll();
+      return await isar
+          .collection<Activity>()
+          .where()
+          .sortByArrivalTime()
+          .findAll();
     } catch (error) {
       debugPrint('アクティビティの取得に失敗しました。: $error');
       return [];
@@ -197,18 +213,21 @@ class IsarService {
     }
   }
 
-//   アクティビティをTripに追加する
-Future<bool> saveActivitiesToTrip(Trip trip, List<Activity> activities) async {
+  //   アクティビティをTripに追加する
+  Future<bool> saveActivitiesToTrip(
+    Trip trip,
+    List<Activity> activities,
+  ) async {
     try {
       final isar = await db;
       trip.activities.addAll(activities);
-          return await isar.writeTxn(() async {
-            await trip.activities.save();
-            return true;
-          });
-  } catch (error) {
+      return await isar.writeTxn(() async {
+        await trip.activities.save();
+        return true;
+      });
+    } catch (error) {
       debugPrint('アクティビティ登録に失敗しました。: $error');
       return false;
-  }
+    }
   }
 }

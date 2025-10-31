@@ -207,7 +207,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${trip.startDate} - ${trip.endDate}',
+                            '${dateFormatter.format(trip.startDate)} ~ ${dateFormatter.format(trip.endDate)}',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.grey[600]),
                           ),
@@ -223,7 +223,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: LinearProgressIndicator(
-                              value: 0.66,
+                              value: _calculateProgress(trip.startDate, trip.endDate)['progress'],
                               backgroundColor: Colors.grey[200],
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).colorScheme.primary,
@@ -232,9 +232,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            '66% 完了 (2日目)',
-                            style: TextStyle(fontSize: 12),
+                          Text(
+                            '${(_calculateProgress(trip.startDate, trip.endDate)['progress'] * 100).toInt()}% 完了 (${_calculateProgress(trip.startDate, trip.endDate)['daysPassed']}日目)',
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
@@ -446,5 +446,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       error: (_, __) => const Center(child: Text('過去の旅行日程を取得できませんでした。')),
       loading: () => const Center(child: CircularProgressIndicator()),
     );
+  }
+
+  // 進捗を計算する関数
+  Map<String, dynamic> _calculateProgress(DateTime startDate, DateTime endDate) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // 旅行の総日数
+    final totalDays = endDate.difference(startDate).inDays + 1;
+
+    // 現在の日付が旅行の何日目か
+    final daysPassed = today.difference(startDate).inDays + 1;
+
+    // 進捗率
+    final progress = daysPassed / totalDays;
+
+    return {
+      'totalDays': totalDays,
+      'daysPassed': daysPassed,
+      'progress': progress.clamp(0.0, 1.0), // 0.0から1.0の範囲にクランプ
+    };
   }
 }

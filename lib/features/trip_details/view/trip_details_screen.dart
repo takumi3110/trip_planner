@@ -20,6 +20,7 @@ class TripDetailsScreen extends ConsumerStatefulWidget {
 
 class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
   final dateFormatter = DateFormat('yyyy/MM/dd');
+  final timeFormatter = DateFormat('HH:mm');
 
   @override
   void initState() {
@@ -166,52 +167,52 @@ class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
                           child: Column(
                             children: [
                               // 予定のハイライトバナー
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.yellow[700],
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.access_time,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '次の予定はココ！',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      '14:00',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Text(
-                                      '古宇利島オーシャンタワー',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              // Container(
+                              //   padding: const EdgeInsets.symmetric(
+                              //     horizontal: 12,
+                              //     vertical: 8,
+                              //   ),
+                              //   decoration: BoxDecoration(
+                              //     color: Colors.yellow[700],
+                              //     borderRadius: BorderRadius.circular(20),
+                              //   ),
+                              //   child: Row(
+                              //     mainAxisSize: MainAxisSize.min,
+                              //     children: [
+                              //       const Icon(
+                              //         Icons.access_time,
+                              //         size: 16,
+                              //         color: Colors.white,
+                              //       ),
+                              //       const SizedBox(width: 4),
+                              //       Text(
+                              //         '次の予定はココ！',
+                              //         style: TextStyle(
+                              //           color: Colors.white,
+                              //           fontSize: 12,
+                              //           fontWeight: FontWeight.bold,
+                              //         ),
+                              //       ),
+                              //       const SizedBox(width: 8),
+                              //       const Text(
+                              //         '14:00',
+                              //         style: TextStyle(
+                              //           color: Colors.white,
+                              //           fontSize: 12,
+                              //           fontWeight: FontWeight.bold,
+                              //         ),
+                              //       ),
+                              //       const SizedBox(width: 4),
+                              //       const Text(
+                              //         '古宇利島オーシャンタワー',
+                              //         style: TextStyle(
+                              //           color: Colors.white,
+                              //           fontSize: 12,
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
 
                               const SizedBox(height: 24),
                               // アクティビティのタイムライン
@@ -253,16 +254,26 @@ class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
           child: Column(
             children: [
               Text(
-                formatTimeOfDay(activity.time),
+                timeFormatter.format(activity.arrivalTime),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: isHighlighted ? Colors.green : Colors.black,
                 ),
               ),
+              const SizedBox(height: 16,),
               Text(
-                activity.timeInMinutes.toString(),
+                '${activity.timeInMinutes}分',
                 style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              ),
+              const SizedBox(height: 16,),
+              Text(
+                timeFormatter.format(activity.departureTime),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isHighlighted ? Colors.green : Colors.black,
+                ),
               ),
             ],
           ),

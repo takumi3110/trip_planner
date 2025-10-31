@@ -370,32 +370,33 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
 
               Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.orange[200],
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Text('👧', style: TextStyle(fontSize: 24)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ギャル子ちゃん（あなた）',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // TODO: メンバー
+                  // Container(
+                  //   width: 40,
+                  //   height: 40,
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.orange[200],
+                  //     shape: BoxShape.circle,
+                  //   ),
+                  //   child: const Center(
+                  //     child: Text('👧', style: TextStyle(fontSize: 24)),
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 12),
+                  // const Expanded(
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       Text(
+                  //         'ギャル子ちゃん（あなた）',
+                  //         style: TextStyle(
+                  //           fontSize: 14,
+                  //           fontWeight: FontWeight.bold,
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                   TextButton(
                     onPressed: () {
                       // TODO: メンバー招待機能
