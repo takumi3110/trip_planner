@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:trip_planner/core/theme/theme_notifier.dart';
+import 'package:trip_planner/widgets/common_bottom_navigation_bar.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _reminderEnabled = true;
   String _notificationTime = '15分前';
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = ref.watch(themeNotifierProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
@@ -97,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (value) {
                       setState(() => _reminderEnabled = value);
                     },
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ),
                 const Divider(height: 1),
@@ -110,33 +113,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 const Divider(height: 1),
-                Consumer<ThemeNotifier>(
-                  builder: (context, themeNotifier, child) {
-                    return ListTile(
-                      leading: Icon(
-                        Icons.palette_outlined,
-                        color: Colors.grey[700],
+                ListTile(
+                  leading: Icon(
+                    Icons.palette_outlined,
+                    color: Colors.grey[700],
+                  ),
+                  title: const Text('テーマカラー変更'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: themeNotifier.currentTheme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                      title: const Text('テーマカラー変更'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: themeNotifier.currentTheme.colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_ios, size: 16),
-                        ],
-                      ),
-                      onTap: () {
-                        _showThemeColorPickerDialog(context);
-                      },
-                    );
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
+                  ),
+                  onTap: () {
+                    _showThemeColorPickerDialog(context);
                   },
                 ),
                 const Divider(height: 1),
@@ -194,7 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 80),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
+      bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 4),
     );
   }
 
@@ -316,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
-        final currentThemeNotifier = Provider.of<ThemeNotifier>(dialogContext);
+        final currentThemeNotifier = ref.watch(themeNotifierProvider);
         return AlertDialog(
           title: const Text('テーマカラーを選択'),
           content: SingleChildScrollView(
@@ -327,7 +326,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   dialogContext,
                   'ライトブルー',
                   Colors.lightBlue,
-                  currentThemeNotifier,
+                  currentThemeNotifier
                 ),
                 _buildThemeColorOption(
                   dialogContext,
@@ -379,8 +378,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color seedColor,
     ThemeNotifier themeNotifier,
   ) {
-    final isSelected = themeNotifier.currentTheme.colorScheme.primary.toARGB32() ==
-        ColorScheme.fromSeed(seedColor: seedColor).primary.toARGB32();
+    final isSelected = themeNotifier.currentTheme.colorScheme.primary ==
+        ColorScheme.fromSeed(seedColor: seedColor).primary;
 
     return ListTile(
       title: Text(title),
@@ -425,7 +424,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           useMaterial3: true,
           scaffoldBackgroundColor: const Color(0xFFFAFAFA),
         );
-        themeNotifier.setTheme(newTheme);
+        ref.read(themeNotifierProvider.notifier).setTheme(newTheme);
         Navigator.of(context).pop();
       },
     );
@@ -463,72 +462,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // TODO: 言語変更処理
         Navigator.pop(context);
       },
-    );
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 4,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'ホーム',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'スケジュール',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 40),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.share_outlined),
-            activeIcon: Icon(Icons.share),
-            label: '共有',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: '設定',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/trip/1');
-              break;
-            case 2:
-              context.go('/trip/create');
-              break;
-            case 3:
-              // TODO: 共有画面
-              break;
-            case 4:
-              // 設定画面（現在のページ）
-              break;
-          }
-        },
-      ),
     );
   }
 }

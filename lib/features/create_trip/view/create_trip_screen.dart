@@ -1,52 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:trip_planner/features/create_trip/view/create_trip_detail.dart';
+import 'package:intl/intl.dart';
+import 'package:trip_planner/data/models/activity.dart';
+import 'package:trip_planner/data/models/trip.dart';
 import 'package:trip_planner/features/create_trip/viewmodel/create_trip_viewmodel.dart';
+import 'package:trip_planner/providers/activity_provider.dart';
+import 'package:trip_planner/providers/isar_provider.dart';
+import 'package:trip_planner/providers/trip_provider.dart';
+import 'package:trip_planner/widgets/common_bottom_navigation_bar.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class CreateTripScreen extends StatefulWidget {
+class CreateTripScreen extends ConsumerStatefulWidget {
   const CreateTripScreen({super.key});
 
   @override
-  State<CreateTripScreen> createState() => _CreateTripScreenState();
+  ConsumerState<CreateTripScreen> createState() => _CreateTripScreenState();
 }
 
-class _CreateTripScreenState extends State<CreateTripScreen> {
+class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   late final CreateTripViewModel _viewModel;
-  final _tripNameController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _destinationController = TextEditingController();
   final _memoController = TextEditingController();
-  
-  DateTime _startDate = DateTime(2025, 10, 21);
-  DateTime _endDate = DateTime(2025, 10, 23);
+
+  DateTime _startDate = DateTime.now();
+  DateTime _endDate = DateTime.now();
+
+  final timeFormatter = DateFormat('HH:mm');
 
   @override
   void initState() {
     super.initState();
     _viewModel = CreateTripViewModel();
-    _tripNameController.text = '沖縄リフレッシュ旅行';
-    _memoController.text = 'とにかく海を楽しむ！🌊 昼食は地元で評判、タコライスのお店に行って欲しい！';
   }
 
   @override
   void dispose() {
     _viewModel.dispose();
-    _tripNameController.dispose();
+    _titleController.dispose();
     _memoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final activityAsync = ref.watch(allActivityProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/'),
-        ),
         title: const Text(
-          '旅行全体の編集',
+          '旅行日程の編集',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -57,19 +62,22 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           TextButton(
             onPressed: () {
               // TODO: 更新処理
+              _saveTrip(context);
               context.go('/');
             },
             style: TextButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            child: const Text('更新'),
+            child: const Text(
+              '更新',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -83,7 +91,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             _buildLabelText('旅行名（必須）'),
             const SizedBox(height: 8),
             TextField(
-              controller: _tripNameController,
+              controller: _titleController,
               decoration: InputDecoration(
                 hintText: '例：沖縄リフレッシュ旅行',
                 border: OutlineInputBorder(
@@ -94,30 +102,53 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ),
             ),
 
+            const SizedBox(height: 8),
+            // 目的地
+            _buildLabelText('目的地（必須）'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _destinationController,
+              decoration: InputDecoration(
+                hintText: '例: 沖縄',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
             const SizedBox(height: 24),
 
             // 期間
             _buildSectionHeader('📅 期間'),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _startDate,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (date != null) {
-                            setState(() => _startDate = date);
-                          }
-                        },
-                        child: Container(
+            InkWell(
+              // Row全体をInkWellで囲む
+              onTap: () async {
+                final DateTimeRange? picked = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                  initialDateRange: DateTimeRange(
+                    start: _startDate,
+                    end: _endDate,
+                  ),
+                );
+                if (picked != null &&
+                    picked != DateTimeRange(start: _startDate, end: _endDate)) {
+                  setState(() {
+                    _startDate = picked.start;
+                    _endDate = picked.end;
+                  });
+                }
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -127,7 +158,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           child: Row(
                             children: [
                               Text(
-                                '2025/10/21',
+                                '${_startDate.year}/${_startDate.month}/${_startDate.day}',
+                                // _startDateで表示を更新
                                 style: const TextStyle(fontSize: 16),
                               ),
                               const Spacer(),
@@ -135,31 +167,18 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                             ],
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('-', style: TextStyle(fontSize: 20)),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _endDate,
-                            firstDate: _startDate,
-                            lastDate: DateTime(2100),
-                          );
-                          if (date != null) {
-                            setState(() => _endDate = date);
-                          }
-                        },
-                        child: Container(
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text('-', style: TextStyle(fontSize: 20)),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -169,7 +188,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           child: Row(
                             children: [
                               Text(
-                                '2025/10/23',
+                                '${_endDate.year}/${_endDate.month}/${_endDate.day}', // _endDateで表示を更新
                                 style: const TextStyle(fontSize: 16),
                               ),
                               const Spacer(),
@@ -177,11 +196,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                             ],
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -214,12 +233,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
             const SizedBox(height: 24),
 
-            // 自動スケジュール生成ボタン
+            // スケジュール追加ボタン
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateTripDetail()));
+                  context.push('/trip/1/create/detail');
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateTripDetail()));
                 },
                 icon: const Icon(Icons.auto_awesome),
                 label: const Text('個別スケジュールを追加'),
@@ -237,28 +257,55 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             const SizedBox(height: 24),
 
             // 追加済みの予定
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildSectionHeader('📍 追加済みの予定（1件）'),
-                TextButton(
-                  onPressed: () {
-                    context.push('/trip/create/detail');
-                  },
-                  child: const Text(
-                    'タップで詳細へ',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // 予定カード
-            _buildScheduleCard(
-              '10/21 (火) 12:00～13:30',
-              '🍴 沖縄そばランチ',
-              '場所：送り駅いません、など',
+            activityAsync.when(
+              data: (activities) {
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSectionHeader(
+                          '📍 追加済みの予定（${activities.length}件）',
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.push('/trip/create/detail');
+                          },
+                          child: const Text(
+                            'タップで詳細へ',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                    activities.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'まだ予定がありません',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: activities.length,
+                          itemBuilder: (context, index) {
+                            return _buildScheduleCard(activities[index]);
+                          },
+                        ),
+                  ],
+                );
+              },
+              error: (_, __) => const Center(child: Text('予定を取得できませんでした。')),
+              loading: () => const Center(child: CircularProgressIndicator()),
             ),
 
             const SizedBox(height: 24),
@@ -266,7 +313,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             // 参加メンバー
             _buildSectionHeader('👥 参加メンバー'),
             const SizedBox(height: 12),
-            
+
             Row(
               children: [
                 Container(
@@ -277,10 +324,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
-                    child: Text(
-                      '👧',
-                      style: TextStyle(fontSize: 24),
-                    ),
+                    child: Text('👧', style: TextStyle(fontSize: 24)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -352,32 +396,27 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
+      bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 2),
     );
   }
 
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildLabelText(String label) {
     return Text(
       label,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-      ),
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
     );
   }
 
-  Widget _buildScheduleCard(String datetime, String title, String location) {
+  Widget _buildScheduleCard(Activity activity) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -388,32 +427,27 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            datetime,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            '${DateFormat('HH:mm').format(activity.arrivalTime)}~${DateFormat('HH:mm').format(activity.departureTime)}',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
           const SizedBox(height: 8),
           Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            activity.name,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[600]),
+              Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: Colors.grey[600],
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  location,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  activity.location,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ),
             ],
@@ -426,92 +460,45 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   void _showDeleteConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('旅行を削除しますか？'),
-        content: const Text('この操作は取り消せません。本当に削除しますか？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('旅行を削除しますか？'),
+            content: const Text('この操作は取り消せません。本当に削除しますか？'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('キャンセル'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // TODO: 削除処理
+                  context.go('/');
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('削除'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: 削除処理
-              context.go('/');
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('削除'),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 2,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'ホーム',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'スケジュール',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 40, color: Colors.green),
-            label: '追加',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.share_outlined),
-            activeIcon: Icon(Icons.share),
-            label: '共有',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: '設定',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/trip/1');
-              break;
-            case 2:
-              // 追加画面
-              context.push('/trip/create/detail');
-              break;
-            case 3:
-              // TODO: 共有画面
-              break;
-            case 4:
-              context.go('/settings');
-              break;
-          }
-        },
-      ),
+  Future<void> _saveTrip(context) async {
+    final isarService = ref.read(isarServiceProvider);
+    final newTrip = Trip(
+        title: _titleController.text,
+        destination: _destinationController.text,
+        startDate: _startDate,
+        endDate: _endDate,
+        numberOfPeople: 1
     );
+
+    final success = await isarService.saveTrip(newTrip);
+    if (success) {
+      ref.invalidate(allTripsProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('旅行の予定を追加しました。'))
+      );
+    }
   }
 }

@@ -11,10 +11,10 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: CreateTripScreen()));
 
       // Verify that the app bar title is displayed.
-      expect(find.text('新しい旅行プラン'), findsOneWidget);
+      expect(find.text('旅行日程の編集'), findsOneWidget);
 
       // Verify that the create button is displayed.
-      expect(find.widgetWithText(ElevatedButton, 'プランを作成'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, '更新'), findsOneWidget);
     });
 
     testWidgets('should update view model when text is entered', (

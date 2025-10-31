@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:trip_planner/features/create_trip/view/create_trip_screen.dart';
+import 'package:intl/intl.dart';
+import 'package:trip_planner/data/models/activity.dart';
 import 'package:trip_planner/features/create_trip/viewmodel/create_trip_viewmodel.dart';
+import 'package:trip_planner/providers/activity_provider.dart';
+import 'package:trip_planner/widgets/common_bottom_navigation_bar.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class CreateTripDetail extends StatefulWidget {
-  const CreateTripDetail({super.key});
+class CreateTripDetail extends ConsumerStatefulWidget {
+  final int tripId;
+  const CreateTripDetail({super.key, required this.tripId});
 
   @override
-  State<CreateTripDetail> createState() => _CreateTripDetailState();
+  ConsumerState<CreateTripDetail> createState() => _CreateTripDetailState();
 }
 
-class _CreateTripDetailState extends State<CreateTripDetail> {
+class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
   late final CreateTripViewModel _viewModel;
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
@@ -18,10 +22,12 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
 
   String? _selectedCategory;
   String? _selectedTransport;
-  DateTime _selectedDate = DateTime(2025, 10, 21);
-  TimeOfDay _startTime = const TimeOfDay(hour: 12, minute: 0);
-  TimeOfDay _endTime = const TimeOfDay(hour: 13, minute: 30);
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _startTime = TimeOfDay.now();
+  TimeOfDay _endTime = TimeOfDay.now();
   bool _shareWithMembers = false;
+
+  final dateFormatter = DateFormat('yyyy/MM/dd');
 
   @override
   void initState() {
@@ -45,10 +51,6 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.close, color: Colors.black),
-        //   onPressed: () => ,
-        // ),
         title: const Text(
           '新規スケジュールの追加',
           style: TextStyle(
@@ -59,9 +61,8 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              // TODO: 保存処理
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateTripScreen()));
+            onPressed: () async {
+              await _saveActivity();
             },
             style: TextButton.styleFrom(
               backgroundColor: Colors.green,
@@ -73,7 +74,6 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
             ),
             child: const Text('保存'),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -108,7 +108,6 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
               children: [
                 _buildCategoryChip('観光', '🏛️', Colors.green),
                 _buildCategoryChip('写真', '📷', Colors.grey),
-                _buildCategoryChip('観光', '🗺️', Colors.grey),
                 _buildCategoryChip('宿泊', '🏨', Colors.grey),
                 _buildCategoryChip('買い物', '🛍️', Colors.grey),
               ],
@@ -128,6 +127,7 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                _buildTransportChip('飛行機', '✈️', Colors.blue),
                 _buildTransportChip('タクシー', '🚕', Colors.green),
                 _buildTransportChip('バス', '🚌', Colors.grey),
                 _buildTransportChip('電車', '🚃', Colors.grey),
@@ -166,7 +166,7 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
                 child: Row(
                   children: [
                     Text(
-                      '2025/10/21',
+                      dateFormatter.format(_selectedDate),
                       style: const TextStyle(fontSize: 16),
                     ),
                     const Spacer(),
@@ -205,7 +205,7 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
                           ),
                           child: Row(
                             children: [
-                              const Text('12:00', style: TextStyle(fontSize: 16)),
+                              Text(_startTime.format(context), style: const TextStyle(fontSize: 16)),
                               const Spacer(),
                               const Icon(Icons.access_time, size: 20),
                             ],
@@ -240,7 +240,7 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
                           ),
                           child: Row(
                             children: [
-                              const Text('13:30', style: TextStyle(fontSize: 16)),
+                              Text(_endTime.format(context), style: const TextStyle(fontSize: 16)),
                               const Spacer(),
                               const Icon(Icons.access_time, size: 20),
                             ],
@@ -364,8 +364,44 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
+      bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 2),
     );
+  }
+
+  Future<void> _saveActivity() async {
+    final activityService = ref.read(activityProvider);
+
+    final newActivity = Activity(
+      name: _titleController.text,
+      location: _locationController.text,
+      description: _memoController.text,
+      timeInMinutes: (_endTime.hour * 60 + _endTime.minute) - (_startTime.hour * 60 + _startTime.minute),
+      category: _selectedCategory,
+      arrivalTime: DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _startTime.hour,
+        _startTime.minute,
+      ),
+      departureTime: DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _endTime.hour,
+        _endTime.minute,
+      ),
+      moved: _selectedTransport ?? '未選択',
+    );
+
+    final success = await activityService.saveActivity(newActivity);
+
+    if (success) {
+      debugPrint('アクティビティが保存されました！');
+      ref.invalidate(allActivityProvider);
+    } else {
+      debugPrint('アクティビティの保存に失敗しました。');
+    }
   }
 
   Widget _buildSectionHeader(String title) {
@@ -442,72 +478,6 @@ class _CreateTripDetailState extends State<CreateTripDetail> {
       backgroundColor: Colors.grey[200],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 2,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'ホーム',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'スケジュール',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 40, color: Colors.green),
-            label: '追加',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.share_outlined),
-            activeIcon: Icon(Icons.share),
-            label: '共有',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: '設定',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/trip/1');
-              break;
-            case 2:
-              // 追加画面（現在のページ）
-              break;
-            case 3:
-              // TODO: 共有画面
-              break;
-            case 4:
-              context.go('/settings');
-              break;
-          }
-        },
       ),
     );
   }

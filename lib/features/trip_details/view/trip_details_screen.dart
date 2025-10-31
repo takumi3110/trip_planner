@@ -1,208 +1,200 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:trip_planner/data/models/trip.dart';
 import 'package:trip_planner/features/trip_details/viewmodel/trip_details_viewmodel.dart';
-import 'package:provider/provider.dart';
+import 'package:trip_planner/widgets/common_bottom_navigation_bar.dart';
 
-class TripDetailsScreen extends StatelessWidget {
+class TripDetailsScreen extends ConsumerWidget {
   final String tripId;
 
   const TripDetailsScreen({super.key, required this.tripId});
 
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create:
-          (_) => TripDetailsViewModel(
-            tripId: tripId,
-            tripRepository: Provider.of(
-              context,
-              listen: false,
-            ), // ここでTripRepositoryを渡す
-          )..loadTripDetails(),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFFAFAFA),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => context.go('/'),
-          ),
-          title: Consumer<TripDetailsViewModel>(
-            builder: (context, viewModel, child) {
-              if (viewModel.trip == null) return const SizedBox.shrink();
-              final trip = viewModel.trip!;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${trip.destination}旅行',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '10/21 (火)',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-        body: Consumer<TripDetailsViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return const Center(child: CircularProgressIndicator());
+  Widget build(BuildContext context, WidgetRef ref) {
+        final viewModel = ref.watch(tripDetailsViewModelProvider(tripId));
+    
+        // TripDetailsScreenが表示されたときにloadTripDetailsを呼び出す
+        // initStateの代わり
+        ref.listen<TripDetailsViewModel>(
+          tripDetailsViewModelProvider(tripId),
+          (_, next) {
+            if (!next.isLoading && next.trip == null) {
+              // エラーハンドリングや、旅行が見つからなかった場合の処理
+              // 例: context.go('/error');
             }
-
-            if (viewModel.trip == null) {
-              return const Center(child: Text('旅行プランが見つかりませんでした。'));
-            }
-
-            final Trip trip = viewModel.trip!;
-            
-            if (trip.itineraries.isEmpty) {
-              return const Center(child: Text('まだ旅程がありません。'));
-            }
-
-            final itinerary = trip.itineraries.first;
-
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 今日の重要事項カード
-                  Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.yellow[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.lightbulb_outline, color: Colors.orange),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '今日の重要事項',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'とにかく海を楽しむ！🌊 昼食は地元で評判、タコライスのお店に行って欲しい',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[800],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // タイムラインスケジュール
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        // 予定のハイライトバナー
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.yellow[700],
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '次の予定はココ！',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                '14:00',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Text(
-                                '古宇利島オーシャンタワー',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 24),
-
-                        // アクティビティのタイムライン
-                        ...itinerary.activities.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final activity = entry.value;
-                          final isLast = index == itinerary.activities.length - 1;
-                          
-                          return _buildTimelineItem(
-                            context,
-                            activity.time.format(context),
-                            _getActivityDuration(index),
-                            _getActivityIcon(index),
-                            activity.name,
-                            activity.location,
-                            _getActivityDetail(index),
-                            isLast,
-                            index == 2, // 12:00のランチをハイライト
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 80),
-                ],
-              ),
-            );
           },
-        ),
-        bottomNavigationBar: _buildBottomNavigationBar(context),
-      ),
-    );
-  }
+        );
+    
+        // 初回ロード
+        if (!viewModel.isLoading && viewModel.trip == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            viewModel.loadTripDetails();
+          });
+        }
+    
+        return Scaffold(
+            backgroundColor: const Color(0xFFFAFAFA),
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => context.go('/'),
+              ),
+              title: viewModel.trip == null
+                  ? const SizedBox.shrink()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${viewModel.trip!.destination}旅行',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '10/21 (火)',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+            body: viewModel.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : viewModel.trip == null
+                    ? const Center(child: Text('旅行プランが見つかりませんでした。'))
+                    : viewModel.trip!.activities.isEmpty
+                        ? const Center(child: Text('まだ旅程がありません。'))
+                        : SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 今日の重要事項カード
+                                Container(
+                                  margin: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.yellow[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.lightbulb_outline, color: Colors.orange),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              '今日の重要事項',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'とにかく海を楽しむ！🌊 昼食は地元で評判、タコライスのお店に行って欲しい',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[800],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+    
+                                // タイムラインスケジュール
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Column(
+                                    children: [
+                                      // 予定のハイライトバナー
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.yellow[700],
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.access_time,
+                                              size: 16,
+                                              color: Colors.white,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '次の予定はココ！',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Text(
+                                              '14:00',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            const Text(
+                                              '古宇利島オーシャンタワー',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+    
+                                      const SizedBox(height: 24),
+    
+                                      // アクティビティのタイムライン
+                                      // ...itinerary.activities.asMap().entries.map((entry) {
+                                      //   final index = entry.key;
+                                      //   final activity = entry.value;
+                                      //   final isLast = index == itinerary.activities.length - 1;
+                                      //
+                                      //   return _buildTimelineItem(
+                                      //     context,
+                                      //     activity.time.format(context),
+                                      //     _getActivityDuration(index),
+                                      //     _getActivityIcon(index),
+                                      //     activity.name,
+                                      //     activity.location,
+                                      //     _getActivityDetail(index),
+                                      //     isLast,
+                                      //     index == 2, // 12:00のランチをハイライト
+                                      //   );
+                                      // }).toList(),
+                                    ],
+                                  ),
+                                ),
+    
+                                const SizedBox(height: 80),
+                              ],
+                            ),
+                          ),
+            bottomNavigationBar:CommonBottomNavigationBar(currentIndex: 1),
+          );}
 
   Widget _buildTimelineItem(
     BuildContext context,
@@ -336,101 +328,6 @@ class TripDetailsScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  String _getActivityDuration(int index) {
-    const durations = ['〜朝10', '30分', '1時間\n14分', '2時間', '2.5時間', '〜翌一\n日'];
-    return index < durations.length ? durations[index] : '';
-  }
-
-  IconData _getActivityIcon(int index) {
-    const icons = [
-      Icons.flight_land,
-      Icons.shopping_bag_outlined,
-      Icons.restaurant,
-      Icons.beach_access,
-      Icons.restaurant_menu,
-      Icons.hotel,
-    ];
-    return index < icons.length ? icons[index] : Icons.place;
-  }
-
-  String? _getActivityDetail(int index) {
-    const details = [
-      '14:00 抜港 (AI便201号)',
-      '〜1:00 抜港 (歩程距離3分)',
-      '〜13:30 抜港 (横田町・東石垣市町)',
-      '〜16:30 抜港 (人幕音季市町前点)',
-      '〜21:00 抜港 (みやび町当地路10分)',
-      null,
-    ];
-    return index < details.length ? details[index] : null;
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 1, // スケジュールタブを選択状態に
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'ホーム',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'スケジュール',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 40),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.share_outlined),
-            activeIcon: Icon(Icons.share),
-            label: '共有',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: '設定',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              // スケジュール画面（現在のページ）
-              break;
-            case 2:
-              context.go('/trip/create');
-              break;
-            case 3:
-              // TODO: 共有画面を作成後に実装
-              break;
-            case 4:
-              context.go('/settings');
-              break;
-          }
-        },
-      ),
     );
   }
 }
