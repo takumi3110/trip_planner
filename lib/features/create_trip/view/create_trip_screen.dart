@@ -20,6 +20,7 @@ class CreateTripScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _destinationController = TextEditingController();
   final _memoController = TextEditingController();
@@ -68,9 +69,10 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              // TODO: 更新処理
-              _saveTrip(context);
-              context.go('/');
+              if (_formKey.currentState!.validate()) {
+                _saveTrip(context);
+                context.go('/');
+              }
             },
             style: TextButton.styleFrom(
               backgroundColor: Colors.green,
@@ -89,41 +91,55 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 旅行の基本設定
-            _buildSectionHeader('✈️ 旅行の基本設定'),
-            const SizedBox(height: 12),
-            _buildLabelText('旅行名（必須）'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                hintText: '例：沖縄リフレッシュ旅行',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 旅行の基本設定
+              _buildSectionHeader('✈️ 旅行の基本設定'),
+              const SizedBox(height: 12),
+              _buildLabelText('旅行名（必須）'),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: '例：沖縄リフレッシュ旅行',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
-                filled: true,
-                fillColor: Colors.white,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '旅行名は必須です';
+                  }
+                  return null;
+                },
               ),
-            ),
 
-            const SizedBox(height: 8),
-            // 目的地
-            _buildLabelText('目的地（必須）'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _destinationController,
-              decoration: InputDecoration(
-                hintText: '例: 沖縄',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 8),
+              // 目的地
+              _buildLabelText('目的地（必須）'),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _destinationController,
+                decoration: InputDecoration(
+                  hintText: '例: 沖縄',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
-                filled: true,
-                fillColor: Colors.white,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '目的地は必須です';
+                  }
+                  return null;
+                },
               ),
-            ),
             const SizedBox(height: 24),
 
             // 期間
@@ -551,12 +567,16 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
 
     final success = await isarService.saveTrip(newTrip);
     if (success) {
-      newTrip.activities.addAll(activities);
-      await newTrip.activities.save();
-      ref.invalidate(allTripsProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('旅行の予定を追加しました。'))
+      final successToActivities = await isarService.saveActivitiesToTrip(
+        newTrip,
+        activities,
       );
+      if (successToActivities) {
+        ref.invalidate(allTripsProvider);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('旅行の予定を追加しました。')));
+      }
     }
   }
 
@@ -565,9 +585,9 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     final success = await isarService.deleteTrip(id);
     if (success) {
       ref.invalidate(allTripsProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('旅行の予定を削除しました。'))
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('旅行の予定を削除しました。')));
     }
   }
 }

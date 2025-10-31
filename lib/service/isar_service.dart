@@ -196,4 +196,19 @@ class IsarService {
       return false;
     }
   }
+
+//   アクティビティをTripに追加する
+Future<bool> saveActivitiesToTrip(Trip trip, List<Activity> activities) async {
+    try {
+      final isar = await db;
+      trip.activities.addAll(activities);
+          return await isar.writeTxn(() async {
+            await trip.activities.save();
+            return true;
+          });
+  } catch (error) {
+      debugPrint('アクティビティ登録に失敗しました。: $error');
+      return false;
+  }
+  }
 }

@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:trip_planner/data/models/activity.dart';
+import 'package:trip_planner/features/create_trip/view/create_trip_screen.dart';
 import 'package:trip_planner/providers/trip_provider.dart';
+import 'package:trip_planner/utils/date_utils.dart';
 import 'package:trip_planner/widgets/common_bottom_navigation_bar.dart';
 
 class TripDetailsScreen extends ConsumerStatefulWidget {
@@ -17,7 +19,7 @@ class TripDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
-  final dateFormatter = DateFormat('yyyy/MM');
+  final dateFormatter = DateFormat('yyyy/MM/dd');
 
   @override
   void initState() {
@@ -59,10 +61,10 @@ class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
                 trip == null
                     ? const SizedBox.shrink()
                     : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          '${trip.destination}旅行',
+                          trip.title,
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 18,
@@ -70,72 +72,93 @@ class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
                           ),
                         ),
                         Text(
-                          '${dateFormatter.format(trip.startDate)} (火) ~ ${dateFormatter.format(trip.endDate)}',
+                          '${dateFormatter.format(trip.startDate)} (${formatWeekday(trip.startDate)}) ~ ${dateFormatter.format(trip.endDate)} (${formatWeekday(trip.endDate)})',
                           style: TextStyle(
                             color: Colors.grey[600],
-                            fontSize: 14,
+                            fontSize: 12,
                           ),
                         ),
                       ],
                     ),
+            actions: [
+              if (trip != null)
+                TextButton(
+                  onPressed: () {
+                    // context.go('/trip/edit/${trip.id}');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => CreateTripScreen(initialTrip: trip),
+                      ),
+                    );
+                  },
+                  child: Text('編集'),
+                ),
+            ],
           ),
-          body: trip == null
-              ? Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'まだ旅行の予定はありません',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                  ),
-                ],
-              ),
-          )
-              :SingleChildScrollView(
+          body:
+              trip == null
+                  ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'まだ旅行の予定はありません',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  : SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 今日の重要事項カード
-                        Container(
-                          margin: const EdgeInsets.all(16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.yellow[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.lightbulb_outline,
-                                color: Colors.orange,
-                              ),
-                              const SizedBox(width: 12),
-                              if (trip.memo != null)
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      '今日の重要事項',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      trip.memo!,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[800],
-                                      ),
-                                    ),
-                                  ],
+                        if (trip.memo != null && trip.memo != '')
+                          Container(
+                            margin: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.yellow[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.lightbulb_outline,
+                                  color: Colors.orange,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        '今日の重要事項',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        trip.memo!,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[800],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
 
                         // タイムラインスケジュール
                         Padding(
@@ -193,9 +216,7 @@ class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
                               const SizedBox(height: 24),
                               // アクティビティのタイムライン
                               ...trip.activities.map((activity) {
-
                                 final isLast = trip.activities.length - 1 == 2;
-
                                 return _buildTimelineItem(
                                   activity,
                                   isLast,
@@ -232,7 +253,7 @@ class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
           child: Column(
             children: [
               Text(
-                activity.time.toString(),
+                formatTimeOfDay(activity.time),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -301,13 +322,10 @@ class _TripDetailsScreenState extends ConsumerState<TripDetailsScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                        Text(
-                          activity.description,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[600],
-                          ),
-                        ),
+                      Text(
+                        activity.description,
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [

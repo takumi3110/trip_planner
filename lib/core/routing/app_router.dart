@@ -22,6 +22,13 @@ final GoRouter appRouter = GoRouter(
             return const CreateTripScreen();
           },
         ),
+        // GoRoute(
+        //     path: 'trip/edit/:id',
+        //   builder: (BuildContext context, GoRouterState state) {
+        //       final int tripId = int.parse(state.pathParameters['id']!);
+        //       return const CreateTripScreen(tripId: tripId);
+        //   }
+        // ),
         GoRoute(
             path: 'trip/:tripId/create/detail',
           builder: (BuildContext context, GoRouterState state) {
