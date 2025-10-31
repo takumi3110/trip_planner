@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:isar/isar.dart';
 import 'package:trip_planner/data/models/activity.dart';
 import 'package:trip_planner/data/models/trip.dart';
-import 'package:trip_planner/features/create_trip/viewmodel/create_trip_viewmodel.dart';
 import 'package:trip_planner/providers/activity_provider.dart';
 import 'package:trip_planner/providers/isar_provider.dart';
 import 'package:trip_planner/providers/trip_provider.dart';
@@ -11,14 +11,15 @@ import 'package:trip_planner/widgets/common_bottom_navigation_bar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class CreateTripScreen extends ConsumerStatefulWidget {
-  const CreateTripScreen({super.key});
+  final Trip? initialTrip;
+
+  const CreateTripScreen({super.key, this.initialTrip});
 
   @override
   ConsumerState<CreateTripScreen> createState() => _CreateTripScreenState();
 }
 
 class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
-  late final CreateTripViewModel _viewModel;
   final _titleController = TextEditingController();
   final _destinationController = TextEditingController();
   final _memoController = TextEditingController();
@@ -31,14 +32,20 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   @override
   void initState() {
     super.initState();
-    _viewModel = CreateTripViewModel();
+    if (widget.initialTrip != null) {
+      _titleController.text = widget.initialTrip!.title;
+      _destinationController.text = widget.initialTrip!.destination;
+      _memoController.text = widget.initialTrip!.memo ?? '';
+      _startDate = widget.initialTrip!.startDate;
+      _endDate = widget.initialTrip!.endDate;
+    }
   }
 
   @override
   void dispose() {
-    _viewModel.dispose();
     _titleController.dispose();
     _memoController.dispose();
+    _destinationController.dispose();
     super.dispose();
   }
 
@@ -378,7 +385,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _showDeleteConfirmDialog(context);
+                  if (widget.initialTrip != null) {
+                    _showDeleteConfirmDialog(context, widget.initialTrip!.id);
+                  } else {
+                    // 新規作成モードで削除ボタンが押された場合の処理（通常は表示されないはず）
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('新規作成中の旅行は削除できません。')),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -457,7 +471,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     );
   }
 
-  void _showDeleteConfirmDialog(BuildContext context) {
+  void _showDeleteConfirmDialog(BuildContext context, Id id) {
     showDialog(
       context: context,
       builder:
@@ -473,6 +487,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                 onPressed: () {
                   Navigator.pop(context);
                   // TODO: 削除処理
+                  _deleteTrip(context, id);
                   context.go('/');
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -485,19 +500,73 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
 
   Future<void> _saveTrip(context) async {
     final isarService = ref.read(isarServiceProvider);
-    final newTrip = Trip(
+    final activities = ref.read(allActivityProvider).value ?? [];
+
+    if (activities.isEmpty) {
+      final bool? continueSaving = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('確認'),
+            content: const Text('アクティビティが追加されていません。このまま旅行を作成しますか？'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false), // いいえ
+                child: const Text('いいえ'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true), // はい
+                child: const Text('はい'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (continueSaving == null || !continueSaving) {
+        return; // 保存処理を中断
+      }
+    }
+
+    Trip newTrip;
+    if (widget.initialTrip != null) {
+      // 既存のTripを更新
+      newTrip = widget.initialTrip!;
+      newTrip.title = _titleController.text;
+      newTrip.destination = _destinationController.text;
+      newTrip.startDate = _startDate;
+      newTrip.endDate = _endDate;
+      newTrip.memo = _memoController.text;
+    } else {
+      // 新しいTripを作成
+      newTrip = Trip(
         title: _titleController.text,
         destination: _destinationController.text,
         startDate: _startDate,
         endDate: _endDate,
-        numberOfPeople: 1
-    );
+        numberOfPeople: 1,
+        memo: _memoController.text,
+      );
+    }
 
     final success = await isarService.saveTrip(newTrip);
     if (success) {
+      newTrip.activities.addAll(activities);
+      await newTrip.activities.save();
       ref.invalidate(allTripsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('旅行の予定を追加しました。'))
+      );
+    }
+  }
+
+  Future<void> _deleteTrip(context, Id id) async {
+    final isarService = ref.read(isarServiceProvider);
+    final success = await isarService.deleteTrip(id);
+    if (success) {
+      ref.invalidate(allTripsProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('旅行の予定を削除しました。'))
       );
     }
   }

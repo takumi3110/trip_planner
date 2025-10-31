@@ -10,7 +10,6 @@ class Trip {
   late String destination; //目的地
   late DateTime startDate;
   late DateTime endDate;
-  // final List<String> itineraries;
   final IsarLinks<Activity> activities = IsarLinks<Activity>();
   int numberOfPeople;
   String? memo;

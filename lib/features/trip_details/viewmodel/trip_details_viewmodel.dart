@@ -33,13 +33,5 @@ class TripDetailsViewModel extends ChangeNotifier {
   }
 }
 
-// TripRepositoryのプロバイダを定義
-final tripRepositoryProvider = Provider<TripRepository>((ref) {
-  return MockTripDataSource(); // ここではMockTripDataSourceを提供
-});
-
 // TripDetailsViewModelのプロバイダを定義 (tripIdを引数に取るFamilyプロバイダ)
-final tripDetailsViewModelProvider = ChangeNotifierProvider.family<TripDetailsViewModel, String>((ref, tripId) {
-  final tripRepository = ref.watch(tripRepositoryProvider);
-  return TripDetailsViewModel(tripId: tripId, tripRepository: tripRepository);
-});
+

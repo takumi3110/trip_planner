@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:trip_planner/features/create_trip/view/create_trip_detail_screen.dart';
 import 'package:trip_planner/features/create_trip/view/create_trip_screen.dart';
 import 'package:trip_planner/features/home_screen.dart';
@@ -31,7 +32,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'trip/:id',
           builder: (BuildContext context, GoRouterState state) {
-            final String tripId = state.pathParameters['id']!;
+            final int tripId = int.parse(state.pathParameters['id']!);
             return TripDetailsScreen(tripId: tripId);
           },
         ),

@@ -149,7 +149,7 @@ class IsarService {
   }
 
   // IDで旅行を取得する
-  Future<Trip?> getTripById(int id) async {
+  Future<Trip?> getTripById(Id id) async {
     try {
       final isar = await db;
       return await isar.collection<Trip>().get(id);

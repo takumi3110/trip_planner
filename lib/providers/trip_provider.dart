@@ -1,3 +1,4 @@
+import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:trip_planner/data/models/trip.dart';
 import 'package:trip_planner/providers/isar_provider.dart';
@@ -22,7 +23,7 @@ final pastTripsProvider = FutureProvider<List<Trip>>((ref) async {
   return await isarService.getPastTrips();
 });
 
-final tripByIdProvider = FutureProvider.family<Trip?, int>((ref, tripId) async {
+final tripByIdProvider = FutureProvider.family<Trip?, Id>((ref, tripId) async {
   final isarService = ref.watch(isarServiceProvider);
   return await isarService.getTripById(tripId);
 });

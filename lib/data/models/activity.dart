@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:trip_planner/data/models/trip.dart';
 
 part 'activity.g.dart';
 
@@ -13,8 +14,9 @@ class Activity {
   final String? category;
   final DateTime arrivalTime;
   final DateTime departureTime;
-
   final String moved;
+
+  final trip = IsarLink<Trip>();
 
   Activity({
     required this.name,

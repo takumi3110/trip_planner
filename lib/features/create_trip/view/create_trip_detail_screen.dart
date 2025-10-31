@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:trip_planner/data/models/activity.dart';
-import 'package:trip_planner/features/create_trip/viewmodel/create_trip_viewmodel.dart';
 import 'package:trip_planner/providers/activity_provider.dart';
 import 'package:trip_planner/widgets/common_bottom_navigation_bar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -15,7 +14,6 @@ class CreateTripDetail extends ConsumerStatefulWidget {
 }
 
 class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
-  late final CreateTripViewModel _viewModel;
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
   final _memoController = TextEditingController();
@@ -32,12 +30,10 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
   @override
   void initState() {
     super.initState();
-    _viewModel = CreateTripViewModel();
   }
 
   @override
   void dispose() {
-    _viewModel.dispose();
     _titleController.dispose();
     _locationController.dispose();
     _memoController.dispose();
