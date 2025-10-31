@@ -1,19 +1,32 @@
-import 'package:flutter/foundation.dart';
-import 'itinerary.dart';
+import 'package:isar/isar.dart';
+import 'package:trip_planner/data/models/activity.dart';
 
-@immutable
+part 'trip.g.dart';
+
+@collection
 class Trip {
-  const Trip({
+  Id id = Isar.autoIncrement;
+  late String title;
+  late String destination; //目的地
+  late DateTime startDate;
+  late DateTime endDate;
+  final IsarLinks<Activity> activities = IsarLinks<Activity>();
+  int numberOfPeople;
+  String? memo;
+
+
+  @Index(type: IndexType.value)
+  String? destinationIndex;
+
+  Trip({
+    required this.title,
     required this.destination,
     required this.startDate,
     required this.endDate,
-    required this.itineraries,
+    // required this.itineraries,
     required this.numberOfPeople,
-  });
-
-  final String destination;
-  final DateTime startDate;
-  final DateTime endDate;
-  final List<Itinerary> itineraries;
-  final int numberOfPeople;
+    this.memo,
+  }) {
+    destinationIndex = destination.toLowerCase();
+  }
 }

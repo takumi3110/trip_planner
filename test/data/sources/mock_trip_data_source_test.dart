@@ -27,10 +27,10 @@ void main() {
       final initialLength = initialTrips.length;
 
       final newTrip = Trip(
+        title: 'test',
         destination: '北海道',
         startDate: DateTime.now(),
         endDate: DateTime.now().add(const Duration(days: 3)),
-        itineraries: [],
         numberOfPeople: 1,
       );
 

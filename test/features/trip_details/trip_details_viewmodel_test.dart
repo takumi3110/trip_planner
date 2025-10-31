@@ -27,10 +27,10 @@ void main() {
 
     test('loadTripDetails loads trip successfully', () async {
       final mockTrip = Trip(
+        title: 'test',
         destination: 'Test Destination',
         startDate: DateTime(2025, 1, 1),
         endDate: DateTime(2025, 1, 5),
-        itineraries: [],
         numberOfPeople: 2,
       );
 
