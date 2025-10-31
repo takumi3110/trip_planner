@@ -14,6 +14,8 @@ class CreateTripDetail extends ConsumerStatefulWidget {
 }
 
 class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
+  final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
   final _memoController = TextEditingController();
@@ -32,11 +34,12 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
     super.initState();
   }
 
-  @override
+    @override
   void dispose() {
     _titleController.dispose();
     _locationController.dispose();
     _memoController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -58,7 +61,9 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
         actions: [
           TextButton(
             onPressed: () async {
-              await _saveActivity();
+              if (_formKey.currentState!.validate()) {
+                await _saveActivity();
+              }
             },
             style: TextButton.styleFrom(
               backgroundColor: Colors.green,
@@ -73,14 +78,17 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
         ],
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
-        child: Column(
+        child: Form(
+          key: _formKey,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 基本情報セクション
             _buildSectionHeader('📝 基本情報'),
             const SizedBox(height: 12),
-            TextField(
+            TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
                 labelText: '予定名 (必須)',
@@ -91,6 +99,12 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
                 filled: true,
                 fillColor: Colors.grey[50],
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '予定名は必須です';
+                }
+                return null;
+              },
             ),
 
             const SizedBox(height: 24),
@@ -280,16 +294,22 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
             // 場所
             _buildLabelText('場所（手入力可）'),
             const SizedBox(height: 8),
-            TextField(
+            TextFormField(
               controller: _locationController,
               decoration: InputDecoration(
-                hintText: '送り駅いません、など',
+                hintText: '道の駅あんとらあ、など',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
                 fillColor: Colors.grey[50],
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '場所は必須です';
+                }
+                return null;
+              },
             ),
 
             const SizedBox(height: 12),
@@ -360,11 +380,48 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
           ],
         ),
       ),
+    ),
       bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 2),
     );
   }
 
   Future<void> _saveActivity() async {
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('カテゴリを選択してください。')),
+      );
+      return;
+    }
+
+    if (_selectedTransport == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('移動手段を選択してください。')),
+      );
+      return;
+    }
+
+    final DateTime arrivalDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _startTime.hour,
+      _startTime.minute,
+    );
+    final DateTime departureDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _endTime.hour,
+      _endTime.minute,
+    );
+
+    if (arrivalDateTime.isAfter(departureDateTime)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('開始時間は終了時間より前に設定してください。')),
+      );
+      return;
+    }
+
     final activityService = ref.read(activityProvider);
 
     final newActivity = Activity(
@@ -395,8 +452,36 @@ class _CreateTripDetailState extends ConsumerState<CreateTripDetail> {
     if (success) {
       debugPrint('アクティビティが保存されました！');
       ref.invalidate(allActivityProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('アクティビティが保存されました！')),
+      );
+
+      // 入力フィールドをクリア
+      _titleController.clear();
+      _locationController.clear();
+      _memoController.clear();
+
+      // 状態をリセット
+      setState(() {
+        _selectedCategory = null;
+        _selectedTransport = null;
+        _selectedDate = DateTime.now();
+        _startTime = TimeOfDay.now();
+        _endTime = TimeOfDay.now();
+        _shareWithMembers = false;
+      });
+
+      // 画面を一番上までスクロール
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     } else {
       debugPrint('アクティビティの保存に失敗しました。');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('アクティビティの保存に失敗しました。')),
+      );
     }
   }
 
